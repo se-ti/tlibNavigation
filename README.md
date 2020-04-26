@@ -10,7 +10,8 @@ Ctrl+Shift+стрелки -- переход в начало / конец.
 
 ## Установка в Chrome
 1. Установите менеджер user script'ов https://www.tampermonkey.net/
-2. Начните создавать новый скрипт, перейдя по [ссылке](chrome-extension://dhdgffkkebhmkfjojejmpbldmpobfkfo/options.html#nav=new-user-script+editor)
+2. Начните создавать новый скрипт, перейдя по такой странной ссылке:<br/>
+chrome-extension://dhdgffkkebhmkfjojejmpbldmpobfkfo/options.html#nav=new-user-script+editor
 3. Скопируйте в открывшееся окно содержимое https://raw.githubusercontent.com/se-ti/tlibNavigation/master/tlibNavigation.js и сохраните. 
 
 ## Установка в Firefox:
