@@ -8,9 +8,13 @@ Userscript для Chrome и Firefox, добавляющий навигацию �
 
 Ctrl+Shift+стрелки -- переход в начало / конец.
 
-## Установка
-Установите менеджер user script'ов 
-Chrome: https://www.tampermonkey.net/
-Firefox: https://www.tampermonkey.net/ или https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/
+## Установка в Chrome
+1. Установите менеджер user script'ов https://www.tampermonkey.net/
+2. Начните создавать новый скрипт, перейдя по ссылке chrome-extension://dhdgffkkebhmkfjojejmpbldmpobfkfo/options.html#nav=new-user-script+editor
+3. Скопируйте в открывшееся окно содержимое https://raw.githubusercontent.com/se-ti/tlibNavigation/master/tlibNavigation.js и сохраните. 
 
-Добавьте в него script
+## Установка в Firefox:
+1. Установите менеджер user script'ов https://www.tampermonkey.net/ или https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/
+2. В настройках менеджера создайте новый скрипт.
+3. Скопируйте в него содержимое https://raw.githubusercontent.com/se-ti/tlibNavigation/master/tlibNavigation.js и сохраните. 
+
