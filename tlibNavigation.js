@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name     Tlib navigation
+// @name     tLib navigation
 // @version  1
 // @namespace    http://tampermonkey.net/
 // @description  Improve Tlib navigation
