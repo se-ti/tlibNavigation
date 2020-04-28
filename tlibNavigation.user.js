@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     tLib navigation
-// @version  2.0
+// @version  2.1
 // @namespace    http://tampermonkey.net/
 // @description  Improve Tlib navigation
 // @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
@@ -38,7 +38,7 @@
     
     var res = str;
     for (var i = 0; i < __htmlSubstitutes.length; i++)
-      res = res.replace(__htmlSubstitutes[i].r, arr[i].t);
+      res = res.replace(__htmlSubstitutes[i].r, __htmlSubstitutes[i].t);
     return res;
   }
   
