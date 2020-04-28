@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     tLib navigation
-// @version  2.1
+// @version  2.2
 // @namespace    http://tampermonkey.net/
 // @description  Improve Tlib navigation
 // @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
@@ -21,7 +21,7 @@
     {r:/'/gi, t:'&apos;'},
     {r:/"/gi, t:'&quot;'}
   ];
-  
+
   function $get(id) {
     return document.getElementById(id);
   }
@@ -35,7 +35,7 @@
 
     if (!str.replace)
       throw Error("String object doesn't have replace method");
-    
+
     var res = str;
     for (var i = 0; i < __htmlSubstitutes.length; i++)
       res = res.replace(__htmlSubstitutes[i].r, __htmlSubstitutes[i].t);
@@ -87,8 +87,8 @@
     $get('Label2').innerHTML = toHTML('Страница ' + pageId + ' из ' + last);
     $get('Panel1').innerHTML = generateNavString(pageId, last);
   }
-  
-  
+
+
   function generateNavString(current, last) {
     var res = [];
     var space = '<span> &nbsp;</span>';
@@ -96,14 +96,14 @@
     res.push(current > 1 ? navItem(1, '<'): space)
 
     for (var i = Math.max(1, current - 5); i <= Math.min(last, current + 5); i++)
-      res.push(i != current ? navItem(i) : '<span>' + toHTML(current) + '</span>');
+      res.push(i != current ? navItem(i) : '<span>' + toHTML('' + current) + '</span>');
 
     res.push(current < last ? navItem(last, '>') : space);
     return res.join(space);
   }
 
   function navItem(id, caption) {
-    return '<span><a href="doc.aspx' + window.location.search.replace(pathRe, 'page=' + id) + '">' + toHTML(caption || id) + '</a></span>';
+    return '<span><a href="doc.aspx' + window.location.search.replace(pathRe, 'page=' + id) + '">' + toHTML((caption || id) + '') + '</a></span>';
   }
 
   document.body.addEventListener('keydown', onTlibKeyDown);
