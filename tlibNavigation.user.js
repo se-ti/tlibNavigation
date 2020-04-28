@@ -1,11 +1,13 @@
 // ==UserScript==
 // @name     tLib navigation
-// @version  1
+// @version  1.1
 // @namespace    http://tampermonkey.net/
 // @description  Improve Tlib navigation
+// @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
+// @updateURL   https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
 // @author       Serge Titov
 // @grant    none
-// @match *://*.tlib.ru/*
+// @match *://*.tlib.ru/doc.aspx*
 // ==/UserScript==
 
 (function() {
