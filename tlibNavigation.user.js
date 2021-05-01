@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     tLib navigation
-// @version  2.2
+// @version  3.0
 // @namespace    http://tampermonkey.net/
 // @description  Improve Tlib navigation
 // @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
@@ -8,6 +8,7 @@
 // @author       Serge Titov
 // @grant    none
 // @match *://*.tlib.ru/doc.aspx*
+// @match *://*.tlib.ru/
 // ==/UserScript==
 
 (function() {
@@ -24,6 +25,10 @@
 
   function $get(id) {
     return document.getElementById(id);
+  }
+  
+  function $find(name) {
+  	return document.querySelector('[name=' + (name || '') + ']');
   }
 
   function toHTML(str) {
@@ -106,5 +111,26 @@
     return '<span><a href="doc.aspx' + window.location.search.replace(pathRe, 'page=' + id) + '">' + toHTML((caption || id) + '') + '</a></span>';
   }
 
-  document.body.addEventListener('keydown', onTlibKeyDown);
+
+  function trySearch(hash) {
+    var fields = { 's': 'ctl00'}; //key - control id
+
+    var m;
+    var has = false;
+    var re = /#?(([^=]+)=([^&]+)&?)+/igm;
+    while ( (m=re.exec(hash)) ) {
+      if (fields[decodeURIComponent(m[2])]) {
+        $find(fields[decodeURIComponent(m[2])]).value = decodeURIComponent(m[3]);
+        has = true;
+      }
+    }
+    
+    if (has)
+      $find('ctl22').click();
+  }  
+  
+  if ((window.location.pathname || '').length > 1)
+  	document.body.addEventListener('keydown', onTlibKeyDown);
+  else if ((window.location.hash || '').length > 0)
+    trySearch(window.location.hash);
 })();
