@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name     tLib navigation
-// @version  3.0
+// @version  3.1
 // @namespace    http://tampermonkey.net/
 // @description  Improve Tlib navigation
 // @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
@@ -26,7 +26,7 @@
   function $get(id) {
     return document.getElementById(id);
   }
-  
+
   function $find(name) {
   	return document.querySelector('[name=' + (name || '') + ']');
   }
@@ -47,12 +47,12 @@
     return res;
   }
 
-  function onTlibKeyDown(evt) {
-    var getPageId = function(href) {
-        var res = pathRe.exec(href);
-        return res ? res[1] : '';
-      };
+  function getPageId(href) {
+    var res = pathRe.exec(href);
+    return res ? res[1] : '';
+  };
 
+  function onTlibKeyDown(evt) {
     if (evt.key != 'ArrowRight' && evt.code != 'ArrowLeft' || !document.querySelectorAll)
       return;
 
@@ -69,6 +69,20 @@
       delta *= -1;
 
     navigateTo(Math.max(first, Math.min(last, cur + delta)), last);
+  }
+
+  function onTlibClick(evt) {
+    var tgt = +getPageId(evt.target.href);
+
+    if (evt.button != 0 || evt.altKey || evt.ctrlKey || !evt.target.href || tgt == '' || !document.querySelectorAll)
+      return;
+
+    var navs = document.querySelectorAll('.NavigateString a');
+    if (navs.length < 2)
+      return;
+
+    navigateTo(+tgt, +getPageId(navs[navs.length - 1].getAttribute('href')));
+    evt.preventDefault();
   }
 
   function navigateTo(pageId, last) {
@@ -124,13 +138,17 @@
         has = true;
       }
     }
-    
+
     if (has)
       $find('ctl22').click();
-  }  
-  
-  if ((window.location.pathname || '').length > 1)
+  }
+
+  if ((window.location.pathname || '').length > 1) {
   	document.body.addEventListener('keydown', onTlibKeyDown);
+    var e = $get('Panel1');
+    if (e)
+      e.addEventListener('click', onTlibClick, true);
+  }
   else if ((window.location.hash || '').length > 0)
     trySearch(window.location.hash);
 })();
