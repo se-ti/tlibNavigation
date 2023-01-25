@@ -67,7 +67,7 @@
 
   function decline(num, arr)
   {
-    if (num == null || !arr || arr.length < 2)
+    if (num == null || !arr || !(arr instanceof Array) || arr.length < 1)
       return '';
 
     if (arr.length < 3)
@@ -345,7 +345,7 @@
           return;
 
         lim = Math.min(cn, lim || 4);
-        if (cn < lim + 2)  // боремся с "и ещё 1"
+        if (cn < lim + 3)  // боремся с "и ещё 1"
           lim = cn;
 
         for (var i = 0; i < lim; i++)
