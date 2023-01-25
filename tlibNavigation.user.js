@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        tLib navigation
-// @version     4.1
+// @version     4.0
 // @namespace   http://tampermonkey.net/
 // @description Improve Tlib navigation
 // @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
@@ -25,6 +25,7 @@
       // debug section
       logAllEntries: false
   };
+
 
 // see https://github.com/gildas-lormeau/zip.js/releases 2.6.62
 // zip.js-2.6.62.zip\dist\zip-no-worker-inflate.min.js
@@ -108,6 +109,7 @@
     if (sett.keyboardNavigationBetweenReports && evt.ctrlKey && evt.altKey && doc > 0) {
       var shift = evt.code == 'ArrowLeft' ? -1: 1
       window.location.search = window.location.search.replace(/id=\d+&.*/, 'id=' + (doc+shift) + '&page=1');
+      evt.stopPropagation();
       return;
     }
 
@@ -117,7 +119,7 @@
     if (!document.querySelectorAll || sett.compatibilityMode)
       return;
 
-    var navs = document.querySelectorAll('.NavigateString a');
+    var navs = getNavAnchors();
     if (navs.length < 2)
       return;
 
@@ -138,12 +140,20 @@
     if (evt.button != 0 || evt.altKey || evt.ctrlKey || !evt.target.href || tgt == '' || !document.querySelectorAll)
       return;
 
-    var navs = document.querySelectorAll('.NavigateString a');
+    var navs = getNavAnchors();
     if (navs.length < 2)
       return;
 
     navigateTo(+tgt, +getPageId(navs[navs.length - 1].getAttribute('href')));
     evt.preventDefault();
+  }
+
+  function onPopState(evt) {
+    var navs = getNavAnchors();
+    if (navs.length < 2)
+      window.reload();
+    else
+      updateLinks(+getPageId(window.location), +getPageId(navs[navs.length - 1].getAttribute('href')));
   }
 
   function navigateTo(pageId, last) {
@@ -153,6 +163,11 @@
     }
 
     history.pushState(null, '', window.location.toString().replace(pathRe, 'page=' + pageId));
+    updateLinks(pageId, last);
+  }
+
+  function updateLinks(pageId, last) {
+      console.log('upd links', pageId, last);
 
     var el = $get('Image1');
     el.setAttribute('src', el.getAttribute('src').replace(/\d+\.png/, pageId + '.png'));
@@ -168,6 +183,9 @@
     $get('Panel1').innerHTML = generateNavString(pageId, last);
   }
 
+  function getNavAnchors() {
+    return document.querySelectorAll('.NavigateString a');
+  }
 
   function generateNavString(current, last) {
     var res = [];
@@ -358,7 +376,8 @@
     if (!href || false)
       return Promise.reject('listZip: no href');
 
-    zip.configure({ useWebWorkers: false });
+    zip.configure({ useWebWorkers: false
+        });
 
     var opt = {
         forceRangeRequests: true
@@ -487,8 +506,11 @@
   	  document.body.addEventListener('keydown', onTlibKeyDown);
 
       var e = $get('Panel1');
-      if (sett.navClicks && e)
+      if (sett.navClicks && e) {
         e.addEventListener('click', onTlibClick, true);
+        if (history.pushState)
+          window.addEventListener('popstate', onPopState, false);
+      }
     }
     else if (sett.searchOnMain && (window.location.hash || '').length > 0)
       trySearch(window.location.hash);
