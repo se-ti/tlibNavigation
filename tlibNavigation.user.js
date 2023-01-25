@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        tLib navigation
-// @version     4.0
+// @version     4.1
 // @namespace   http://tampermonkey.net/
 // @description Improve Tlib navigation
 // @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
@@ -376,8 +376,7 @@
     if (!href || false)
       return Promise.reject('listZip: no href');
 
-    zip.configure({ useWebWorkers: false
-        });
+    zip.configure({ useWebWorkers: false });
 
     var opt = {
         forceRangeRequests: true
