@@ -19,8 +19,8 @@
       compatibilityMode: true,                   // работа из userScript вместе со скрпитом, уже установленным на сайте tLib
 
       searchOnMain: true,                        // предзаполнять поле Маршрут на главной значением из параметра запроса http://tlib.ru/#s=Казбек, и искать по нему, синтезируя событие click
-      navClicks: true,                           // перехватывать клик в номеры страницы скана и подменять лишь ссылку на картинку
-      keyboardNavigationBetweenReports: true,    // Ctrl+Alt+стрелки -- переход между отчетами
+      navClicks: true,                           // перехватывать клик в номер страницы скана и подменять лишь ссылку на картинку
+      keyboardNavigationBetweenReports: true,    // Ctrl+Alt+стрелки -- переход между отчетами (кажется не работает в FF)
 
       // debug section
       logAllEntries: false,
@@ -346,7 +346,7 @@
           return;
 
         lim = Math.min(cn, lim || 4);
-        if (cn < lim + 3)  // боремся с "и ещё 1"
+        if (cn < lim + 3)  // боремся с "и ещё 2"
           lim = cn;
 
         for (var i = 0; i < lim; i++)
@@ -513,12 +513,12 @@
     if ((window.location.pathname || '').length > 1) {
   	  document.body.addEventListener('keydown', onTlibKeyDown);
 
+      if (history.pushState)
+        window.addEventListener('popstate', onPopState, false);
+
       var e = $get('Panel1');
-      if (sett.navClicks && e) {
+      if (sett.navClicks && e)
         e.addEventListener('click', onTlibClick, true);
-        if (history.pushState)
-          window.addEventListener('popstate', onPopState, false);
-      }
     }
     else if (sett.searchOnMain && (window.location.hash || '').length > 0)
       trySearch(window.location.hash);
