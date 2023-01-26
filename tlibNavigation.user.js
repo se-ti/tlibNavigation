@@ -23,7 +23,8 @@
       keyboardNavigationBetweenReports: true,    // Ctrl+Alt+стрелки -- переход между отчетами
 
       // debug section
-      logAllEntries: false
+      logAllEntries: false,
+      logSummary: false
   };
 
 
@@ -447,7 +448,8 @@
     if (summary.length <= 0)
       return;
 
-    console.log('summary', summary);
+    if (sett.logSummary)
+      console.log('summary', summary);
     var tgt = insertHolder(rootElem);
     if (!tgt)
       return;
