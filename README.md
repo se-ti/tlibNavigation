@@ -12,3 +12,11 @@ Ctrl+Alt+Shift+стрелки -- переход на следующий / пре
 1. Установите менеджер user script'ов https://www.tampermonkey.net/
 2. Перейдите по ссылке https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js и согласитесь на установку скрипта 
 3. Ура! Можно идти читать отчеты :)
+
+
+### Перенос на сайт
+1. Скопировать скрипт на сайт
+2. В настройках скрипта установить compatibilityMode = false ([см. в коде](https://github.com/se-ti/tlibNavigation/blob/4a237be6e05b35f4655f0b5e0b01d54d58b16d41/tlibNavigation.user.js#L19))
+3. Добавить ссылку на скрипт на страницу отчета и м.б. на главную
+4. При подключении скрипта не забыть добавить в ссылку произвольный параметр, чтобы вытеснить текущую версию из кеша браузеров. 
+<script src="/js/tlibnav.js?v=__YYY__*"></script>
