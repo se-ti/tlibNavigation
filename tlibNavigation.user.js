@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        tLib navigation
-// @version     4.1
+// @version     4.2
 // @namespace   http://tampermonkey.net/
 // @description Improve Tlib navigation
 // @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
@@ -414,7 +414,7 @@
     {
         style = document.createElement('style');
         style.id = styleId;
-        style.innerHTML = '.shadowedPanel {position: absolute; border: 1px solid grey; box-shadow: 0.5ex 0.5ex 0.25ex #e0e0e0, -0.5ex -0.5ex #ffffff; background: #ffffff; z-index: 1;} ' +
+        style.innerHTML = '.shadowedPanel {position: absolute; border: 1px solid #c4c4c4; box-shadow: 0.5ex 0.5ex 0.25ex #e0e0e0, -0.5ex -0.35ex #ffffff; background: #ffffff; z-index: 1;} ' +
             '.visHidden {display: none; right:-0.6ex; padding: 0.6ex; padding-left: 1ex;} ' +
             '.visToggle:hover .visHidden {display: block;} ' +
             '.visToggle {position: relative;} ' +
