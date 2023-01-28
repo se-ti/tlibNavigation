@@ -65,6 +65,22 @@
       res = res.replace(__htmlSubstitutes[i].r, __htmlSubstitutes[i].t);
     return res;
   }
+  
+  function beautySizeHtml(szBytes) {
+    var sz = +szBytes;
+    if (isNaN(sz) || sz < 0)
+      return szBytes;
+
+    var sfx = ['б', 'Кб', 'Мб', 'Гб', 'Тб'];
+
+    var i = 0;
+    sz = Math.round(sz);
+    for (; i < sfx.length && sz > 3000; i++)
+      sz /= 1024;
+
+    var scale = sz < 5 && i > 0 ? 10 : 1;
+    return Math.round(sz * scale) / scale + ' ' + sfx[Math.min(i, sfx.length - 1)];
+  }
 
   function decline(num, arr)
   {
@@ -168,8 +184,6 @@
   }
 
   function updateLinks(pageId, last) {
-      console.log('upd links', pageId, last);
-
     var el = $get('Image1');
     el.setAttribute('src', el.getAttribute('src').replace(/\d+\.png/, pageId + '.png'));
 
@@ -271,37 +285,21 @@
       //if (evt)
   }
 
-  function beautySizeHtml(szBytes) {
-    var sz = +szBytes;
-    if (isNaN(sz) || sz < 0)
-      return szBytes;
-
-    var sfx = ['б', 'Кб', 'Мб', 'Гб', 'Тб'];
-
-    var i = 0;
-    sz = Math.round(sz);
-    for (; i < sfx.length && sz > 3000; i++)
-      sz /= 1024;
-
-    var scale = sz < 5 && i > 0 ? 10 : 1;
-    return Math.round(sz * scale) / scale + ' ' + sfx[Math.min(i, sfx.length - 1)];
-  }
-
   var Tlib = function() {
-      this.zipEntries = [];
+    this.zipEntries = [];
 
-      this._idx = { ext: this._indexable, entries: [], lim: 5, cap: ['с текстом']};
-      this._img = { ext: this._images, entries: [], lim: 3, cap: ['изображение', 'изображения', 'изображений']};
-      this._geo = { ext: this._geodata, entries: [], lim: 4, cap: ['с геоданными']};
-      this._skip = { ext: this._skip, entries: [], lim: 0, cap: ['прочее', 'прочих', 'прочих']};
-      this._other = { ext: this._otherExt, entries: [], lim:3, cap: ['прочее', 'прочих', 'прочих']};
+    this._idx = { ext: this._indexable, entries: [], lim: 5, cap: ['с текстом']};
+    this._img = { ext: this._images, entries: [], lim: 3, cap: ['изображение', 'изображения', 'изображений']};
+    this._geo = { ext: this._geodata, entries: [], lim: 4, cap: ['с геоданными']};
+    this._skip = { ext: this._skip, entries: [], lim: 0, cap: ['прочее', 'прочих', 'прочих']};
+    this._other = { ext: this._otherExt, entries: [], lim:3, cap: ['прочее', 'прочих', 'прочих']};
 
 
-      this._known = [this._idx, this._img, this._geo, this._skip];
+    this._known = [this._idx, this._img, this._geo, this._skip];
 
-      this._unknown = 0;
-      this._unknExt = {};
-      this._total = 0;
+    this._unknown = 0;
+    this._unknExt = {};
+    this._total = 0;
   }
 
   Tlib.prototype = {
@@ -517,8 +515,10 @@
         window.addEventListener('popstate', onPopState, false);
 
       var e = $get('Panel1');
-      if (sett.navClicks && e)
+      if (sett.navClicks && e) {
         e.addEventListener('click', onTlibClick, true);
+        e.title = 'Для листания отчетов используйте стрелки влево/вправо';
+      }
     }
     else if (sett.searchOnMain && (window.location.hash || '').length > 0)
       trySearch(window.location.hash);
