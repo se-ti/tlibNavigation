@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        tLib navigation
-// @version     4.2
+// @version     4.3
 // @namespace   http://tampermonkey.net/
 // @description Improve Tlib navigation
 // @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
@@ -26,6 +26,17 @@
       logAllEntries: false,
       logSummary: false
   };
+
+
+// хорошие
+// http://tlib.ru/doc.aspx?id=43694&page=1
+// http://tlib.ru/doc.aspx?id=43707&page=1
+
+// http://tlib.ru/doc.aspx?id=43540&page=1 -- пустой
+// http://tlib.ru/doc.aspx?id=43553&page=1 -- пустой!
+// http://tlib.ru/doc.aspx?id=43728&page=1 pdf в macos
+// http://tlib.ru/doc.aspx?id=43497&page=1 single pdf 866
+// http://tlib.ru/doc.aspx?id=43597&page=1 images in archive
 
 
 // see https://github.com/gildas-lormeau/zip.js/releases 2.6.62
@@ -65,7 +76,7 @@
       res = res.replace(__htmlSubstitutes[i].r, __htmlSubstitutes[i].t);
     return res;
   }
-  
+
   function beautySizeHtml(szBytes) {
     var sz = +szBytes;
     if (isNaN(sz) || sz < 0)
@@ -133,7 +144,7 @@
     if ((evt.altKey || evt.metaKey) && !evt.ctrlKey && !evt.shiftKey)    // alt- (на маке -- Command aka meta)стрелки -- стандартные шорткаты браузеров back-forward
       return;
 
-    if (!document.querySelectorAll || sett.compatibilityMode)
+    if (!document.querySelectorAll)
       return;
 
     var navs = getNavAnchors();
@@ -175,7 +186,7 @@
 
   function navigateTo(pageId, last) {
     if (!history.pushState) {
-      window.location.search = window.location.search.replace(pathRe, 'page=' + pageId);
+      window.location.href.replace(pathRe, 'page=' + pageId);
       return;
     }
 
@@ -286,20 +297,20 @@
   }
 
   var Tlib = function() {
-    this.zipEntries = [];
+      this.zipEntries = [];
 
-    this._idx = { ext: this._indexable, entries: [], lim: 5, cap: ['с текстом']};
-    this._img = { ext: this._images, entries: [], lim: 3, cap: ['изображение', 'изображения', 'изображений']};
-    this._geo = { ext: this._geodata, entries: [], lim: 4, cap: ['с геоданными']};
-    this._skip = { ext: this._skip, entries: [], lim: 0, cap: ['прочее', 'прочих', 'прочих']};
-    this._other = { ext: this._otherExt, entries: [], lim:3, cap: ['прочее', 'прочих', 'прочих']};
+      this._idx = { ext: this._indexable, entries: [], lim: 5, cap: ['с текстом']};
+      this._img = { ext: this._images, entries: [], lim: 3, cap: ['изображение', 'изображения', 'изображений']};
+      this._geo = { ext: this._geodata, entries: [], lim: 4, cap: ['с геоданными']};
+      this._skip = { ext: this._skip, entries: [], lim: 0, cap: ['прочее', 'прочих', 'прочих']};
+      this._other = { ext: this._otherExt, entries: [], lim:3, cap: ['прочее', 'прочих', 'прочих']};
 
 
-    this._known = [this._idx, this._img, this._geo, this._skip];
+      this._known = [this._idx, this._img, this._geo, this._skip];
 
-    this._unknown = 0;
-    this._unknExt = {};
-    this._total = 0;
+      this._unknown = 0;
+      this._unknExt = {};
+      this._total = 0;
   }
 
   Tlib.prototype = {
@@ -492,7 +503,7 @@
     if (!anchorElem)
       return;
 
-    anchorElem &&listZip(anchorElem.href)
+    listZip(anchorElem.href)
       .catch(e => {if (e != 'listZip: no href') console.error(e);})
       .then(entries => getSummary(entries))
       .then(summary => render(summary, anchorElem));
@@ -502,13 +513,17 @@
   function initExt() {
     // на странице отчета
     var zipHref = $get('HyperLinkGetZip');
-    tryEnrichZip(zipHref);
+    if (!sett.compatibilityMode)
+      tryEnrichZip(zipHref);
 
     // на главной
     (document.querySelectorAll('#DataGrid1 tbody tr td:last-child a') || [])
       .forEach(e => tryEnrichZip(e));
 
     if ((window.location.pathname || '').length > 1) {
+      if (!sett.compatibilityMode)
+        return;
+
   	  document.body.addEventListener('keydown', onTlibKeyDown);
 
       if (history.pushState)
