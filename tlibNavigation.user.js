@@ -311,7 +311,7 @@
     _otherExt: {'bz': 'application/x-bzip', 'bz2': 'application/x-bzip2', 'zip': 'application/zip', '7z': 'application/x-7z-compressed', 'rar': 'application/vnd.rar', 'gz': 'application/gzip', 'xls': 'application/vnd.ms-excel', 'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},
 
     // знаем, скачать не даем
-    _skip: {'js': '', 'php':'', 'cnt':'', 'css': '', 'ico': '', 'woff':'', 'woff2': ''},
+    _skip: {'db': '', 'ini': '', 'js': '', 'php':'', 'cnt':'', 'css': '', 'ico': '', 'woff':'', 'woff2': ''},
 
     add: function(entry, idx) {
       sett.logAllEntries && console.log(idx+1, entry.filename.replace(/.*\//,''));
@@ -338,24 +338,25 @@
         this._unknExt[ext] = true;
     },
 
-    _toRec: function(arr, imgType, lim) {
+    _toRec: function(res, imgType, lim) {
         var cn = imgType.entries.length;
         if (cn <= 0)
-          return;
+          return res;
 
         lim = Math.min(cn, lim || 4);
         if (cn < lim + 3)  // боремся с "и ещё 2"
           lim = cn;
 
         for (var i = 0; i < lim; i++)
-          arr.push({cap: '', more: 0, entry: imgType.entries[i]});
+          res.items.push({cap: '', more: 0, entry: imgType.entries[i]});
 
         if (cn > lim)
-          arr.push({cap: imgType.cap, more: cn - lim, entry: null});
+          res.more.push({cap: imgType.cap, more: cn - lim, entry: null});
+        return res;
     },
 
     summary: function() {
-        var res = [];
+        var res = {items: [], more:[]};
         var self = this;
         [this._idx, this._geo, this._img]
             .forEach(function(e) { self._toRec(res, e) });
@@ -371,18 +372,13 @@
 
 
   function listZip(href) {
-
-    if (!href || false)
+    if (!href)
       return Promise.reject('listZip: no href');
 
     zip.configure({ useWebWorkers: false });
-
-    var opt = {
-        forceRangeRequests: true
-    };
+    var opt = { forceRangeRequests: true };
 
     // https://gildas-lormeau.github.io/zip.js/core-api.html#zip-writer
-    // console.log('try', opt);
     const reader = new zip.ZipReader(new zip.HttpReader(href, opt), opt);
     return reader.getEntries()
       .then((entries) => {
@@ -393,7 +389,6 @@
         reader.close();
         console.error(e);
       });
-
   }
 
   function insertHolder(tgt) {
@@ -458,22 +453,21 @@
     var dec866 = new TextDecoder('866');
     var decUtf = new TextDecoder('utf8');
     var entries = [];
-    var html = summary.map(function(it) {
-        if (!it.entry)
-          //return '<div>и ещё ' + it.more + ' ' + toHTML(it.cap || '') + '</div>';
-          return '<tr><td colspan="2">и ещё ' + it.more + ' ' + toHTML(decline(it.more, it.cap || [])) + '</td></tr>';
-
-        //console.log(it.entry);
-
+    var html = summary.items.map(function(it) {
         entries.push(it.entry);
         var fname = it.entry.filename.replace(/.*\//,'');
         if (!it.entry.filenameUTF8)
-            fname = (isUtf8(it.entry.rawFilename) ? decUtf : dec866).decode(it.entry.rawFilename).replace(/.*\//,'');
-        //return '<div><a href="" class="zLink">' + toHTML(fname) + '</a> ' + beautySizeHtml(it.entry.uncompressedSize) + '</div>';
+          fname = (isUtf8(it.entry.rawFilename) ? decUtf : dec866).decode(it.entry.rawFilename).replace(/.*\//,'');
         return '<tr><td><a href="" class="zLink">' + toHTML(fname) + '</a></td><td align="right">' + beautySizeHtml(it.entry.uncompressedSize) + '</td></tr>';
     });
 
-    tgt.innerHTML = '<table border="0" cellspacing="3">' + html.join('') + '</table>';
+    var more = '';
+    if (summary.more.length > 0) {
+      var set = summary.more.map(function(it, idx, arr) { var sep = idx == 0 ? '' : (idx == arr.length -1 ? ' и ' : ', '); return sep + it.more + ' ' + toHTML(decline(it.more, it.cap || [])); });
+      more = '<tr><td colspan="2">и ещё ' + set.join('') + '</td></tr>';
+    }
+
+    tgt.innerHTML = '<table border="0" cellspacing="3">' + html.join('') + more + '</table>';
     tgt.addEventListener('click', onZipLinkClick, true);
     var hrefs = tgt.querySelectorAll('a');
     entries.forEach(function(e, idx) { if (hrefs[idx]) hrefs[idx].zipEntry = e; });
