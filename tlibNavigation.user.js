@@ -82,8 +82,7 @@
     return Math.round(sz * scale) / scale + ' ' + sfx[Math.min(i, sfx.length - 1)];
   }
 
-  function decline(num, arr)
-  {
+  function decline(num, arr) {
     if (num == null || !arr || !(arr instanceof Array) || arr.length < 1)
       return '';
 
@@ -94,8 +93,7 @@
       return arr[2];
 
     // остальные группируются так:
-    switch (num % 10)
-    {
+    switch (num % 10) {
       case 1: return arr[0];
 
       case 2:
@@ -281,8 +279,6 @@
           window.setTimeout(function() {URL.revokeObjectURL(url); }, 0);
       })
       .catch(function(e) {console.error(e); toggleDownload(false);});
-
-      //if (evt)
   }
 
   var Tlib = function() {
@@ -407,8 +403,8 @@
             '.visToggle {position: relative;} ' +
             '.visHidden div, .visHidden td {white-space: nowrap;} ' +
             '.visHidden td {padding: 1px;} ' +
-            '.visActivator { font-weight: bold; margin-left: 0.4em; margin-top: 0.3ex; display: inline-block; padding: 0.1ex 0.9ex; } ' +
-            '@media (hover:hover) { .visActivator { display: none;} } '+
+            '.visActivator { font-weight: bold; margin-left: 0.4em; margin-top: 0.3ex; display: inline-block; padding: 0.1ex 0.9ex; user-select: none; } ' +
+            '@media (hover:hover) { .visActivator { display: none;} } ' +
             '#DataGrid1 .visHidden {right: -0.8ex; right: calc(-0.6ex - 5px)} ';
         document.body.append(style);
     }
