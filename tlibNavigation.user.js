@@ -407,7 +407,9 @@
             '.visToggle {position: relative;} ' +
             '.visHidden div, .visHidden td {white-space: nowrap;} ' +
             '.visHidden td {padding: 1px;} ' +
-            '#DataGrid1 .visHidden {right: -0.8ex; right: calc(-0.6ex - 5px)}';
+            '.visActivator { font-weight: bold; margin-left: 0.4em; margin-top: 0.3ex; display: inline-block; padding: 0.1ex 0.9ex; } ' +
+            '@media (hover:hover) { .visActivator { display: none;} } '+
+            '#DataGrid1 .visHidden {right: -0.8ex; right: calc(-0.6ex - 5px)} ';
         document.body.append(style);
     }
 
@@ -417,9 +419,12 @@
     wrapper.className = td.className + ' visToggle';
     td.append(wrapper);
 
-    wrapper.append(tgt);
+    var elem = document.createElement('span');
+    elem.className = 'visActivator MainButton';
+    elem.innerHTML = '?';
+    wrapper.append(tgt, ' ', elem);
 
-    var elem = document.createElement('div');
+    elem = document.createElement('div');
     elem.className = 'visHidden shadowedPanel';
 
     wrapper.append(elem);
