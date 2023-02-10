@@ -315,8 +315,10 @@
     _otherExt: {'bz': 'application/x-bzip', 'bz2': 'application/x-bzip2', 'zip': 'application/zip', '7z': 'application/x-7z-compressed', 'rar': 'application/vnd.rar', 'gz': 'application/gzip', 'tar': 'application/x-tar', 'csv': 'text/csv', 'ods': 'application/vnd.oasis.opendocument.spreadsheet', 'xls': 'application/vnd.ms-excel', 'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},
 
     // знаем, скачать не даем
-    _skip: {'db': '', 'ini': '', 'js': '', 'php':'', 'cnt':'', 'css': '', 'ico': '', 'ec4': '', 'map': '', 'woff':'', 'woff2': '', 'pl': '', 'bat': '', 'cmd': '', 'exe': '', 'com': '', 'pif': '', 'sh': ''},
-    // встретили, думаем про: gdb, gmw, jgw, prj
+    _skip: {'db': '', 'ini': '', 'js': '', 'php':'', 'cnt':'', 'css': '', 'ico': '', 'ec4': '', 'woff':'', 'woff2': '', 'pl': '', 'bat': '', 'cmd': '', 'exe': '', 'com': '', 'pif': '', 'sh': '',
+            // вообще полезные, но знающих, что с ними делать -- единицы
+            'gdb': '', 'gmw': '', 'jgw': '', 'map': '', 'prj': ''
+           },
 
     add: function(entry, idx) {
       sett.logAllEntries && console.log(idx+1, entry.filename.replace(/.*\//,''));
