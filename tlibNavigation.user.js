@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        tLib navigation
-// @version     4.4
+// @version     4.5
 // @namespace   http://tampermonkey.net/
 // @description Improve Tlib navigation
 // @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
@@ -21,11 +21,6 @@
       searchOnMain: true,                        // предзаполнять поле Маршрут на главной значением из параметра запроса http://tlib.ru/#s=Казбек, и искать по нему, синтезируя событие click
       navClicks: true,                           // перехватывать клик в номер страницы скана и подменять лишь ссылку на картинку
       keyboardNavigationBetweenReports: true,    // Ctrl+Alt+стрелки -- переход между отчетами (кажется не работает в FF)
-
-                                                 // куда логируем неизвестные расширения
-      logUnknownExt: function(msg) { var fd = new FormData(); fd.set('message', 'tLib unknown exts: ' + msg); fd.set('level', 3);
-                               var url = 'ht' + 'p.xaja/ssorc/ur.artsew//:spt'.split('').reverse().join('') + 'hp?m=log';
-                               fetch(url, {method: 'POST', body: fd, mode: 'cors' }).catch(function(e) {}) },
 
       // debug section
       logAllEntries: false,
@@ -307,18 +302,26 @@
   }
 
   Tlib.prototype = {
-    _indexable: {'htm': 'text/html', 'html': 'text/html', 'pdf':'application/pdf', 'doc': 'application/msword', 'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'odp': 'application/vnd.oasis.opendocument.presentation', 'ppt': 'application/vnd.ms-powerpoint', 'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'odt': 'application/vnd.oasis.opendocument.text', 'rtf': 'application/rtf', 'txt': 'text/plain'},
-    _images: {'bmp': 'image/bmp', 'gif': 'image/gif', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 'tif': 'image/tiff', 'tiff': 'image/tiff', 'webp': 'image/webp'},
-    _geodata: {'kml': 'application/vnd.google-earth.kml+xml', 'kmz': 'application/vnd.google-earth.kmz', 'gpx': 'application/gpx+xml and application/octet-stream', 'plt': 'application/x-plt', 'wpt': 'text/wpt'},
+    _indexable: {'htm': 'text/html', 'html': 'text/html', 'mhtml': 'application/x-mimearchive', 'shtml': 'text/html', 'pdf':'application/pdf', 'doc': 'application/msword', 'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'odp': 'application/vnd.oasis.opendocument.presentation', 'ppt': 'application/vnd.ms-powerpoint', 'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'odt': 'application/vnd.oasis.opendocument.text', 'rtf': 'application/rtf', 'txt': 'text/plain', 'xps': 'application/vnd.ms-xpsdocument'},
+    _images: {'bmp': 'image/bmp', 'gif': 'image/gif', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 'tif': 'image/tiff', 'tiff': 'image/tiff', 'webp': 'image/webp',
+              //video
+              'avi': 'video/x-msvideo', 'mp4': 'video/mp4', 'swf': 'application/x-shockwave-flash'
+             },
+    _geodata: {'kml': 'application/vnd.google-earth.kml+xml', 'kmz': 'application/vnd.google-earth.kmz', 'gpx': 'application/gpx+xml', 'plt': 'application/x-plt', 'wpt': 'text/wpt',
+               // карты?
+               'jnx': 'application/jnx'
+              },
 
     // знаем, даем скачать
-    _otherExt: {'bz': 'application/x-bzip', 'bz2': 'application/x-bzip2', 'zip': 'application/zip', '7z': 'application/x-7z-compressed', 'rar': 'application/vnd.rar', 'gz': 'application/gzip', 'tar': 'application/x-tar', 'csv': 'text/csv', 'ods': 'application/vnd.oasis.opendocument.spreadsheet', 'xls': 'application/vnd.ms-excel', 'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},
+    _otherExt: {'bz': 'application/x-bzip', 'bz2': 'application/x-bzip2', 'djvu': 'image/vnd', 'zip': 'application/zip', '7z': 'application/x-7z-compressed', 'rar': 'application/vnd.rar', 'gz': 'application/gzip', 'tar': 'application/x-tar', 'csv': 'text/csv', 'ods': 'application/vnd.oasis.opendocument.spreadsheet', 'xls': 'application/vnd.ms-excel', 'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},
 
     // знаем, скачать не даем
-    _skip: {'db': '', 'ini': '', 'js': '', 'php':'', 'cnt':'', 'css': '', 'ico': '', 'ec4': '', 'woff':'', 'woff2': '', 'pl': '', 'bat': '', 'cmd': '', 'exe': '', 'com': '', 'pif': '', 'sh': '',
+    _skip: {'btr': '', 'cnf': '', 'cnt': '', 'db': '', 'ini': '', 'js': '', 'jsp': '', 'php': '', 'css': '', 'ico': '', 'ec4': '', 'woff':'', 'woff2': '',
+            'pl': '', 'bat': '', 'cmd': '', 'exe': '', 'com': '', 'pif': '', 'sh': '', 'lck': '', 'lnk': '', 'tmp': '', 'mps': '',
             // вообще полезные, но знающих, что с ними делать -- единицы
-            'gdb': '', 'gmw': '', 'jgw': '', 'map': '', 'prj': ''
+            'mp': '', 'ocd': '', 'ozf4': '', 'img': '', 'gdb': '', 'gmw': '', 'jgw': '', 'map': '', 'prj': '', 'xml':''
            },
+
 
     add: function(entry, idx) {
       sett.logAllEntries && console.log(idx+1, entry.filename.replace(/.*\//,''));
@@ -362,7 +365,7 @@
         return res;
     },
 
-    summary: function(unknownCallback, href) {
+    summary: function(href) {
         var res = {items: [], more:[]};
         var self = this;
         [this._idx, this._geo, this._img]
@@ -371,9 +374,7 @@
         this._toRec(res, this._other, 1);
 
         if (Object.keys(this._unknExt).length > 0)
-          unknownCallback instanceof Function ?
-            unknownCallback(Object.keys(this._unknExt).join(', ') + '\nfrom ' + href)
-            : console.error('unknown extensions', Object.keys(this._unknExt));
+          console.error('unknown extensions', Object.keys(this._unknExt));
 
         return res;
     }
@@ -452,7 +453,7 @@
     if (!summ || !rootElem)
       return;
 
-    var summary = summ.summary(sett.logUnknownExt, rootElem.href);
+    var summary = summ.summary(rootElem.href);
     if (summary.length <= 0)
       return;
 
