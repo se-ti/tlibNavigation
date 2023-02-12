@@ -290,6 +290,7 @@
       this._idx = { ext: this._indexable, entries: [], lim: 5, cap: ['с текстом']};
       this._img = { ext: this._images, entries: [], lim: 3, cap: ['изображение', 'изображения', 'изображений']};
       this._geo = { ext: this._geodata, entries: [], lim: 4, cap: ['с геоданными']};
+      this._map = { ext: this._maps, entries: [], lim: 3, cap: ['с картами']};
       this._skip = { ext: this._skip, entries: [], lim: 0, cap: ['прочее', 'прочих', 'прочих']};
       this._other = { ext: this._otherExt, entries: [], lim:3, cap: ['прочее', 'прочих', 'прочих']};
 
@@ -302,26 +303,23 @@
   }
 
   Tlib.prototype = {
-    _indexable: {'htm': 'text/html', 'html': 'text/html', 'mhtml': 'application/x-mimearchive', 'shtml': 'text/html', 'pdf':'application/pdf', 'doc': 'application/msword', 'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'odp': 'application/vnd.oasis.opendocument.presentation', 'ppt': 'application/vnd.ms-powerpoint', 'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'odt': 'application/vnd.oasis.opendocument.text', 'rtf': 'application/rtf', 'txt': 'text/plain', 'xps': 'application/vnd.ms-xpsdocument'},
+    _indexable: {'htm': 'text/html', 'html': 'text/html', 'mhtml': 'application/x-mimearchive', 'shtml': 'text/html', 'pdf':'application/pdf', 'doc': 'application/msword', 'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'odp': 'application/vnd.oasis.opendocument.presentation', 'ppt': 'application/vnd.ms-powerpoint', 'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'odt': 'application/vnd.oasis.opendocument.text', 'rtf': 'application/rtf', 'txt': 'text/plain', 'xps': 'application/vnd.ms-xpsdocument', 'djvu': 'image/vnd'},
     _images: {'bmp': 'image/bmp', 'gif': 'image/gif', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 'tif': 'image/tiff', 'tiff': 'image/tiff', 'webp': 'image/webp',
               //video
               'avi': 'video/x-msvideo', 'mp4': 'video/mp4', 'swf': 'application/x-shockwave-flash'
              },
-    _geodata: {'kml': 'application/vnd.google-earth.kml+xml', 'kmz': 'application/vnd.google-earth.kmz', 'gpx': 'application/gpx+xml', 'plt': 'application/x-plt', 'wpt': 'text/wpt',
-               // карты?
-               'jnx': 'application/jnx'
-              },
+    _geodata: {'kml': 'application/vnd.google-earth.kml+xml', 'kmz': 'application/vnd.google-earth.kmz', 'gpx': 'application/gpx+xml', 'plt': 'application/x-plt', 'wpt': 'text/wpt', 'gdb': 'application/octet-stream'},
+    _maps: {'jnx': 'application/jnx', 'img': 'application/octet-stream', 'mp': 'application/octet-stream', 'ocd': 'application/octet-stream'},
 
     // знаем, даем скачать
-    _otherExt: {'bz': 'application/x-bzip', 'bz2': 'application/x-bzip2', 'djvu': 'image/vnd', 'zip': 'application/zip', '7z': 'application/x-7z-compressed', 'rar': 'application/vnd.rar', 'gz': 'application/gzip', 'tar': 'application/x-tar', 'csv': 'text/csv', 'ods': 'application/vnd.oasis.opendocument.spreadsheet', 'xls': 'application/vnd.ms-excel', 'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},
+    _otherExt: {'bz': 'application/x-bzip', 'bz2': 'application/x-bzip2', 'zip': 'application/zip', '7z': 'application/x-7z-compressed', 'rar': 'application/vnd.rar', 'gz': 'application/gzip', 'tar': 'application/x-tar', 'csv': 'text/csv', 'ods': 'application/vnd.oasis.opendocument.spreadsheet', 'xls': 'application/vnd.ms-excel', 'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},
 
     // знаем, скачать не даем
     _skip: {'btr': '', 'cnf': '', 'cnt': '', 'db': '', 'ini': '', 'js': '', 'jsp': '', 'php': '', 'css': '', 'ico': '', 'ec4': '', 'woff':'', 'woff2': '',
             'pl': '', 'bat': '', 'cmd': '', 'exe': '', 'com': '', 'pif': '', 'sh': '', 'lck': '', 'lnk': '', 'tmp': '', 'mps': '',
-            // вообще полезные, но знающих, что с ними делать -- единицы
-            'mp': '', 'ocd': '', 'ozf4': '', 'img': '', 'gdb': '', 'gmw': '', 'jgw': '', 'map': '', 'prj': '', 'xml':''
+            // умеренно полезные, либо знающих, что с ними делать -- единицы
+            'ozf4': '', 'gmw': '', 'jgw': '', 'prj': '', 'map': '', 'xml':''
            },
-
 
     add: function(entry, idx) {
       sett.logAllEntries && console.log(idx+1, entry.filename.replace(/.*\//,''));
@@ -368,7 +366,7 @@
     summary: function(href) {
         var res = {items: [], more:[]};
         var self = this;
-        [this._idx, this._geo, this._img]
+        [this._idx, this._geo, this._map, this._img]
             .forEach(function(e) { self._toRec(res, e) });
 
         this._toRec(res, this._other, 1);
