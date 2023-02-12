@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        tLib navigation
-// @version     4.5
+// @version     4.6
 // @namespace   http://tampermonkey.net/
 // @description Improve Tlib navigation
 // @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
@@ -402,24 +402,6 @@
   function insertHolder(tgt) {
     if (!tgt)
       return null;
-
-    var styleId = 'tlibCustomStyle';
-    var style = $get(styleId);
-    if (style == null)
-    {
-        style = document.createElement('style');
-        style.id = styleId;
-        style.innerHTML = '.shadowedPanel {position: absolute; border: 1px solid #c4c4c4; box-shadow: 0.5ex 0.5ex 0.25ex #e0e0e0, -0.5ex -0.35ex #ffffff; background: #ffffff; z-index: 1;} ' +
-            '.visHidden {display: none; right: -0.7ex; right: calc(-0.6ex - 3px); padding: 0.6ex; padding-left: 1ex;} ' +
-            '.visToggle:hover .visHidden {display: block;} ' +
-            '.visToggle {position: relative;} ' +
-            '.visHidden div, .visHidden td {white-space: nowrap;} ' +
-            '.visHidden td {padding: 1px;} ' +
-            '.visActivator { font-weight: bold; margin-left: 0.4em; margin-top: 0.3ex; display: inline-block; padding: 0.1ex 0.9ex; user-select: none;} ' +
-            '@media (hover:hover) { .visActivator { display: none;} } '+
-            '#DataGrid1 .visHidden {right: -0.8ex; right: calc(-0.6ex - 5px)} ';
-        document.body.append(style);
-    }
 
     var td = tgt.parentElement;
 
