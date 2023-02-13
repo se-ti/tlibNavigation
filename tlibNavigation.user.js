@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        tLib navigation
-// @version     4.6
+// @version     4.7
 // @namespace   http://tampermonkey.net/
 // @description Improve Tlib navigation
 // @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
@@ -16,7 +16,7 @@
   'use strict';
 
   var sett = {
-      compatibilityMode: true,                   // работа из userScript вместе со скрпитом, уже установленным на сайте tLib
+      compatibilityMode: false,                   // работа из userScript вместе со скрпитом, уже установленным на сайте tLib
 
       searchOnMain: true,                        // предзаполнять поле Маршрут на главной значением из параметра запроса http://tlib.ru/#s=Казбек, и искать по нему, синтезируя событие click
       navClicks: true,                           // перехватывать клик в номер страницы скана и подменять лишь ссылку на картинку
@@ -317,7 +317,7 @@
     // знаем, скачать не даем
     _skip: {'btr': '', 'cnf': '', 'cnt': '', 'db': '', 'ini': '', 'js': '', 'jsp': '', 'php': '', 'css': '', 'ico': '', 'ec4': '', 'woff':'', 'woff2': '',
             'pl': '', 'bat': '', 'cmd': '', 'exe': '', 'com': '', 'pif': '', 'sh': '', 'lck': '', 'lnk': '', 'tmp': '', 'mps': '',
-            // умеренно полезные, либо знающих, что с ними делать -- единицы
+            // вообще полезные, но знающих, что с ними делать -- единицы
             'ozf4': '', 'gmw': '', 'jgw': '', 'prj': '', 'map': '', 'xml':''
            },
 
@@ -402,6 +402,16 @@
   function insertHolder(tgt) {
     if (!tgt)
       return null;
+
+    var styleId = 'tlibCustomStyle';
+    var style = $get(styleId);
+    if (style == null)
+    {
+        style = document.createElement('link');
+        style.setAttribute('rel', 'stylesheet');
+        style.setAttribute('href', '/js/tlibnav.css?v=4.6');
+        document.body.append(style);
+    }
 
     var td = tgt.parentElement;
 
