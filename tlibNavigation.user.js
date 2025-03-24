@@ -64,7 +64,7 @@
   }
 
   function $find(name) {
-  	return document.querySelector('[name=' + (name || '') + ']');
+    return document.querySelector('[name=' + (name || '') + ']');
   }
 
   function toHTML(str) {
@@ -84,14 +84,14 @@
   }
 
   String.format = function() {
-	var s = arguments[0];
-	for (var i = 0; i < arguments.length - 1; i++) {
+    var s = arguments[0];
+    for (var i = 0; i < arguments.length - 1; i++) {
       var reg = new RegExp("\\{" + i + "\\}", "gm");
       s = s.replace(reg, arguments[i + 1]);
-	}
+    }
 
-	return s;
-}
+    return s;
+  }
 
   function beautySizeHtml(szBytes) {
     var sz = +szBytes;
@@ -296,7 +296,7 @@
 
         var style = document.createElement('style');
         style.innerHTML = '#localMap {width: 0px; position: fixed; top: 0px; height: 100%; right: -4px; transition: width 0.7s} form > table { transition: margin-left 0.7s;}' +
-            'button.showMap a {color: black; text-decoration: none; } a.showMap { white-space: nowrap; }' +
+            'a.showMap { white-space: nowrap; }' +
             '@media (min-width: 890px) {  .has-map #localMap { width: calc(90% - 780px + 78px - 4em); -width: 0px; } ' +
             '.has-map form > table { margin-left: calc(10% - 78px) !important; } }';
 
@@ -309,20 +309,24 @@
 
     document.body.classList.toggle('has-map', urls.length > 0);
     if (urls.length != 0)
-      map.src = tracksHref(docId, urls);
+      map.src = tracksHref(docId, urls, true);
   }
 
-  function tracksHref(docId, urls) {
-        if (urls.length == 0)
+  function tracksHref(docId, urls, minimize) {
+    if (urls.length == 0)
       return;
 
-    //map.src = 'https://nakarte.me/#min=1/1/1/1&nktu=' + urls.map(function(u) { return encodeURIComponent(u); }).join('/');
+    var parts = [];
+    if (minimize)
+      parts.push('min=1/1/1/1');
+
     var str = JSON.stringify(urls.map(function(u) {return { n: u.decFname.replace(/\.[^\.]*$/, ''), u: dlHref(docId, u)}}));
     var enc = bytesToBase64(new TextEncoder().encode(str))
         .replace(/\+/g, '-')
         .replace(/\//g, '_');
+    parts.push('nktj=' + enc);
 
-    return 'https://nakarte.me/#min=1/1/1/1&nktj=' + enc;
+    return 'https://nakarte.me/#' + parts.join('&');
   }
 
   function addMapsButton(tgt, docId, urls) {
@@ -332,9 +336,9 @@
 
     var elem = document.createElement('a');
     elem.target='_blank';
-    elem.className = '-MainButton showMap';
+    elem.className = 'showMap';
     elem.innerHTML = '<button type="button">треки &#8599;</button>';
-    elem.href = tracksHref(docId, urls);
+    elem.href = tracksHref(docId, urls, false);
 
     tgt.append(document.createElement('br'), elem);
   }
