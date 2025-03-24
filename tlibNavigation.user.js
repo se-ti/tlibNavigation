@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        tLib navigation
-// @version     5.0
+// @version     5.1
 // @namespace   http://tampermonkey.net/
 // @description Improve Tlib navigation
 // @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
@@ -65,38 +65,6 @@
 
   function $find(name) {
   	return document.querySelector('[name=' + (name || '') + ']');
-  }
-
-  function on(elem, type, selector, callback, capture) {
-    if (!elem.matches)
-      throw new Error('on: elem doesn\'t support \"matches\" method');
-
-    if (!elem.addEventListener)
-      throw new Error('on: elem doesn\'t support \"addEventListener\" method');
-
-    if (!elem)
-      throw new Error('on: no elem');
-
-    if ((type || '') == '')
-      throw new Error('on: empty event type');
-
-	if (!callback)
-      throw new Error('on: null callback');
-
-    if (!(callback instanceof Function))
-      throw new Error('on: callback is not a function');
-
-    selector = selector || '';
-
-    elem.addEventListener(type, function(evt) {
-        var tgt = evt.target;
-        while (tgt) {
-          if (selector == '' || tgt.matches(selector)) return callback(evt);
-          if (tgt == elem)
-            return;
-          tgt = tgt.parentNode;
-        }
-      }, capture);
   }
 
   function toHTML(str) {
@@ -318,18 +286,17 @@
     dl.style.display = dl._count > 0 ? 'block' : 'none';
   }
 
-  function showMap(urls, docId) {
+  function showMap(docId, urls) {
     urls = urls || [];
 
     var id = 'localMap';
     var map = $get(id);
     if (!map) {
-        /*if (urls.length == 0)
-            return;*/
         document.querySelector('form > table').style.marginLeft = 'max(0px, calc(50% - 390px))';
 
         var style = document.createElement('style');
         style.innerHTML = '#localMap {width: 0px; position: fixed; top: 0px; height: 100%; right: -4px; transition: width 0.7s} form > table { transition: margin-left 0.7s;}' +
+            'button.showMap a {color: black; text-decoration: none; } a.showMap { white-space: nowrap; }' +
             '@media (min-width: 890px) {  .has-map #localMap { width: calc(90% - 780px + 78px - 4em); -width: 0px; } ' +
             '.has-map form > table { margin-left: calc(10% - 78px) !important; } }';
 
@@ -341,17 +308,35 @@
     }
 
     document.body.classList.toggle('has-map', urls.length > 0);
+    if (urls.length != 0)
+      map.src = tracksHref(docId, urls);
+  }
 
-    if (urls.length == 0)
+  function tracksHref(docId, urls) {
+        if (urls.length == 0)
       return;
 
     //map.src = 'https://nakarte.me/#min=1/1/1/1&nktu=' + urls.map(function(u) { return encodeURIComponent(u); }).join('/');
-    var str = JSON.stringify(urls.map(function(u) {return { n: u.decFname, u: dlHref(docId, u)}}));
+    var str = JSON.stringify(urls.map(function(u) {return { n: u.decFname.replace(/\.[^\.]*$/, ''), u: dlHref(docId, u)}}));
     var enc = bytesToBase64(new TextEncoder().encode(str))
         .replace(/\+/g, '-')
         .replace(/\//g, '_');
 
-    map.src = 'https://nakarte.me/#min=1/1/1/1&nktj=' + enc;
+    return 'https://nakarte.me/#min=1/1/1/1&nktj=' + enc;
+  }
+
+  function addMapsButton(tgt, docId, urls) {
+    urls = urls || [];
+    if (urls.length == 0)
+      return;
+
+    var elem = document.createElement('a');
+    elem.target='_blank';
+    elem.className = '-MainButton showMap';
+    elem.innerHTML = '<button type="button">треки &#8599;</button>';
+    elem.href = tracksHref(docId, urls);
+
+    tgt.append(document.createElement('br'), elem);
   }
 
   function bytesToBase64(bytes) {
@@ -360,9 +345,6 @@
     ).join('');
     return btoa(binString);
   }
-
-// Usage
-bytesToBase64(new TextEncoder().encode("a Ā 𐀀 文 🦄"));
 
   function dlHref(docId, entry) {
     return String.format('https://westra.ru/passes/tlp.php?i={0}/{1}/.{2}', docId, entry.zipIdx, entry.ext); // заэнкодят их позже!
@@ -379,7 +361,7 @@ bytesToBase64(new TextEncoder().encode("a Ā 𐀀 文 🦄"));
 
     var holder = evt.target.parentNode.parentNode.parentNode.parentNode.parentNode;
     if (mappable && holder.dataset['pageId']) {
-      showMap([entry], holder.dataset['pageId']);
+      showMap(holder.dataset['pageId'], [entry]);
       return;
     }
 
@@ -538,12 +520,15 @@ bytesToBase64(new TextEncoder().encode("a Ā 𐀀 文 🦄"));
     }
 
     var td = tgt.parentElement;
+    var elem = td.querySelector('.shadowedPanel');
+    if (elem)
+      return elem;
 
     var wrapper = document.createElement('div');
     wrapper.className = td.className + ' visToggle';
     td.append(wrapper);
 
-    var elem = document.createElement('span');
+    elem = document.createElement('span');
     elem.className = 'visActivator MainButton';
     elem.innerHTML = '?';
     wrapper.append(tgt, ' ', elem);
@@ -552,6 +537,7 @@ bytesToBase64(new TextEncoder().encode("a Ā 𐀀 文 🦄"));
     elem.className = 'visHidden shadowedPanel';
 
     wrapper.append(elem);
+
     return elem;
   }
 
@@ -578,16 +564,14 @@ bytesToBase64(new TextEncoder().encode("a Ā 𐀀 文 🦄"));
     if (summary.length <= 0)
       return;
 
-    console.log('new ver!');
     var dec866 = new TextDecoder('866');
     var decUtf = new TextDecoder('utf8');
     var m = /(\d+)\.zip/i.exec(rootElem.href);
     var docId = m ? m[1] : null;
 
-    if (sett.compatibilityMode && docPage) {
-        showMap(summ.getMappable().map(function(e) { e.decFname = normalizeName(e, dec866, decUtf); return e; }, this), docId);
-        return;
-    }
+    var mappable = summ.getMappable().map(function(e) { e.decFname = normalizeName(e, dec866, decUtf); return e; }, this);
+    if (docPage)
+      showMap(docId, mappable);
 
     if (sett.logSummary)
       console.log('summary', summary);
@@ -595,27 +579,37 @@ bytesToBase64(new TextEncoder().encode("a Ā 𐀀 文 🦄"));
     if (!tgt)
       return;
 
-    tgt.zipEntries = summ.zipEntries;
+    if (!docPage || !sett.compatibilityMode) {
+      tgt.zipEntries = summ.zipEntries;
 
-    var entries = [];
-    var html = summary.items.map(function(it) {
+      var entries = [];
+      var html = summary.items.map(function(it) {
         entries.push(it.entry);
         it.entry.decFname = normalizeName(it.entry, dec866, decUtf);
         return '<tr><td><a href="" class="zLink">' + toHTML(it.entry.decFname) + '</a></td><td align="right">' + beautySizeHtml(it.entry.uncompressedSize) + '</td></tr>';
-    });
+      });
 
-    var more = '';
-    if (summary.more.length > 0) {
-      var set = summary.more.map(function(it, idx, arr) { var sep = idx == 0 ? '' : (idx == arr.length -1 ? ' и ' : ', '); return sep + it.more + ' ' + toHTML(decline(it.more, it.cap || [])); });
-      more = '<tr><td colspan="2">и ещё ' + set.join('') + '</td></tr>';
+      var more = '';
+      if (summary.more.length > 0) {
+        var set = summary.more.map(function(it, idx, arr) { var sep = idx == 0 ? '' : (idx == arr.length -1 ? ' и ' : ', '); return sep + it.more + ' ' + toHTML(decline(it.more, it.cap || [])); });
+        more = '<tr><td colspan="2">и ещё ' + set.join('') + '</td></tr>';
+      }
+
+      tgt.innerHTML = '<table border="0" cellspacing="3">' + html.join('') + more + '</table>';
+      tgt.addEventListener('click', onZipLinkClick, true);
+      tgt.dataset['pageId'] = docId;
+
+      var hrefs = tgt.querySelectorAll('a');
+      entries.forEach(function(e, idx) { if (hrefs[idx]) hrefs[idx].zipEntry = e; });
+    }
+    else if (docPage && tgt.parentNode.parentNode.nodeName == 'TD') {
+        var el = tgt.querySelector('.visToggle .visActivator');
+        el && el.remove();
+        el = tgt.querySelector('.visToggle .shadowedPanel');
+        el && el.remove();
     }
 
-    tgt.innerHTML = '<table border="0" cellspacing="3">' + html.join('') + more + '</table>';
-    tgt.addEventListener('click', onZipLinkClick, true);
-    tgt.dataset['pageId'] = docId;
-
-    var hrefs = tgt.querySelectorAll('a');
-    entries.forEach(function(e, idx) { if (hrefs[idx]) hrefs[idx].zipEntry = e; });
+    addMapsButton(tgt.parentNode.parentNode, docId, mappable);
   }
 
   function getSummary(zipEntries) {
@@ -638,12 +632,11 @@ bytesToBase64(new TextEncoder().encode("a Ā 𐀀 文 🦄"));
       .then(summary => render(summary, anchorElem, docPage));
   }
 
-
   function initExt() {
     // на странице отчета
     var zipHref = $get('HyperLinkGetZip');
     tryEnrichZip(zipHref, true);
-    showMap([], 0);
+    showMap(0, []);
 
     // на главной
     (document.querySelectorAll('#DataGrid1 tbody tr td:last-child a') || [])
