@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        tLib navigation
-// @version     5.1
+// @version     5.2
 // @namespace   http://tampermonkey.net/
 // @description Improve Tlib navigation
 // @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
@@ -17,6 +17,7 @@
 
   var sett = {
       compatibilityMode: true,                   // работа из userScript вместе со скрпитом, уже установленным на сайте tLib
+      openMapByDefault: (document.cookie || '').indexOf('openMapByDefault=1') >= 0,                    // открывать карту
 
       searchOnMain: true,                        // предзаполнять поле Маршрут на главной значением из параметра запроса http://tlib.ru/#s=Казбек, и искать по нему, синтезируя событие click
       navClicks: true,                           // перехватывать клик в номер страницы скана и подменять лишь ссылку на картинку
@@ -286,74 +287,6 @@
     dl.style.display = dl._count > 0 ? 'block' : 'none';
   }
 
-  function showMap(docId, urls) {
-    urls = urls || [];
-
-    var id = 'localMap';
-    var map = $get(id);
-    if (!map) {
-        document.querySelector('form > table').style.marginLeft = 'max(0px, calc(50% - 390px))';
-
-        var style = document.createElement('style');
-        style.innerHTML = '#localMap {width: 0px; position: fixed; top: 0px; height: 100%; right: -4px; transition: width 0.7s} form > table { transition: margin-left 0.7s;}' +
-            'a.showMap { white-space: nowrap; }' +
-            '@media (min-width: 890px) {  .has-map #localMap { width: calc(90% - 780px + 78px - 4em); -width: 0px; } ' +
-            '.has-map form > table { margin-left: calc(10% - 78px) !important; } }';
-
-        document.body.append(style);
-
-        map = document.createElement('iframe');
-        map.id = id;
-        document.body.append(map);
-    }
-
-    document.body.classList.toggle('has-map', urls.length > 0);
-    if (urls.length != 0)
-      map.src = tracksHref(docId, urls, true);
-  }
-
-  function tracksHref(docId, urls, minimize) {
-    if (urls.length == 0)
-      return;
-
-    var parts = [];
-    if (minimize)
-      parts.push('min=1/1/1/1');
-
-    var str = JSON.stringify(urls.map(function(u) {return { n: u.decFname.replace(/\.[^\.]*$/, ''), u: dlHref(docId, u)}}));
-    var enc = bytesToBase64(new TextEncoder().encode(str))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_');
-    parts.push('nktj=' + enc);
-
-    return 'https://nakarte.me/#' + parts.join('&');
-  }
-
-  function addMapsButton(tgt, docId, urls) {
-    urls = urls || [];
-    if (urls.length == 0)
-      return;
-
-    var elem = document.createElement('a');
-    elem.target='_blank';
-    elem.className = 'showMap';
-    elem.innerHTML = '<button type="button">треки &#8599;</button>';
-    elem.href = tracksHref(docId, urls, false);
-
-    tgt.append(document.createElement('br'), elem);
-  }
-
-  function bytesToBase64(bytes) {
-    const binString = Array.from(bytes, function(byte) {
-      return String.fromCodePoint(byte);}
-    ).join('');
-    return btoa(binString);
-  }
-
-  function dlHref(docId, entry) {
-    return String.format('https://westra.ru/passes/tlp.php?i={0}/{1}/.{2}', docId, entry.zipIdx, entry.ext); // заэнкодят их позже!
-  }
-
   function onZipLinkClick(evt) {
     if (evt.target.nodeName != 'A' || evt.target.getAttribute('href') != '')
       return;
@@ -361,14 +294,6 @@
     evt.preventDefault();
     var entry = evt.target.zipEntry;
     var viewable = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'txt'].includes(entry.ext);
-    var mappable = evt.altKey && Tlib.prototype.mappable.includes(entry.ext);
-
-    var holder = evt.target.parentNode.parentNode.parentNode.parentNode.parentNode;
-    if (mappable && holder.dataset['pageId']) {
-      showMap(holder.dataset['pageId'], [entry]);
-      return;
-    }
-
 
     var tag = evt.target;
     toggleDownload(true);
@@ -385,7 +310,6 @@
           window.setTimeout(function() {URL.revokeObjectURL(url); }, 0);
       })
       .catch(function(e) {console.error(e); toggleDownload(false);});
-
   }
 
   var Tlib = function() {
@@ -407,13 +331,13 @@
   }
 
   Tlib.prototype = {
-    mappable: ['kml', 'kmz', 'gpx', 'plt', 'wpt'],
+    mappable: ['kml', 'kmz', 'gpx', 'plt', 'wpt', 'geojson'],
     _indexable: {'htm': 'text/html', 'html': 'text/html', 'mhtml': 'application/x-mimearchive', 'shtml': 'text/html', 'pdf':'application/pdf', 'doc': 'application/msword', 'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'odp': 'application/vnd.oasis.opendocument.presentation', 'ppt': 'application/vnd.ms-powerpoint', 'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'odt': 'application/vnd.oasis.opendocument.text', 'rtf': 'application/rtf', 'txt': 'text/plain', 'xps': 'application/vnd.ms-xpsdocument', 'djvu': 'image/vnd'},
     _images: {'bmp': 'image/bmp', 'gif': 'image/gif', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 'tif': 'image/tiff', 'tiff': 'image/tiff', 'webp': 'image/webp',
               //video
               'avi': 'video/x-msvideo', 'mp4': 'video/mp4', 'swf': 'application/x-shockwave-flash'
              },
-    _geodata: {'kml': 'application/vnd.google-earth.kml+xml', 'kmz': 'application/vnd.google-earth.kmz', 'gpx': 'application/gpx+xml', 'plt': 'application/x-plt', 'wpt': 'text/wpt', 'gdb': 'application/octet-stream'},
+    _geodata: {'kml': 'application/vnd.google-earth.kml+xml', 'kmz': 'application/vnd.google-earth.kmz', 'gpx': 'application/gpx+xml', 'plt': 'application/x-plt', 'wpt': 'text/wpt', 'gdb': 'application/octet-stream', 'geojson': 'application/geo+json'},
     _maps: {'jnx': 'application/jnx', 'img': 'application/octet-stream', 'mp': 'application/octet-stream', 'ocd': 'application/octet-stream'},
 
     // знаем, даем скачать
@@ -545,6 +469,101 @@
     return elem;
   }
 
+  function showMap(href, reset) {
+    href = href || '';
+    var id = 'localMap';
+    var map;
+    var holder = $get(id);
+    reset = holder == null || reset && holder && holder.querySelector('iframe').src != href;
+    if (!holder) {
+      Array.from(document.querySelectorAll('form > table, table.MainHeader, body > div')).forEach(function(sel) { (sel).style.marginLeft = 'max(0px, calc(50% - 390px))';} );
+
+      var style = document.createElement('style');
+      style.innerHTML = '#localMap {width: 0; position: fixed; top: 0; height: 100%; right: -4px; transition: width 0.7s; padding 0;} #localMap iframe {width: 100%; height: 100%;} form > table { transition: margin-left 0.7s; } ' +
+          'button.showMap, .showMap button {min-height: 3.4ex; vertical-align: bottom;} .showMap + .showMap { margin-left: 1ex; } button.showMap.inner, .showMap.show .show,  .showMap .hide {display: none;} .showMap.show .hide { display: inline; }'  +
+
+          '@media (min-width: 890px) { .has-map #localMap { width: calc(90% - 780px + 78px - 4em); } ' +
+          '.has-map form > table { margin-left: calc(10% - 78px) !important; } ' +
+          'button .invis {display: none;} button.showMap.inner {display: unset;} }';
+
+      document.body.append(style);
+
+      holder = document.createElement('div');
+      holder.id = id;
+      document.body.append(holder);
+    }
+    if (reset) {
+      map = holder.querySelector('iframe');
+      map && map.remove();
+
+      holder.innerHTML = '<iframe></iframe>';
+    }
+
+    map = holder.querySelector('iframe');
+    document.body.classList.toggle('has-map', href != '');
+    if (href != '' && map.src != href)
+      map.src = href;
+  }
+
+  function addMapsButton(tgt, docId, urls, reset, autoShow) {
+    urls = urls || [];
+    if (urls.length == 0)
+      return;
+
+    var hrefMin = tracksHref(docId, urls, true);
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'showMap inner' + (autoShow ? ' show' : '');
+    btn.innerHTML = '<span class="show">треки</span><span class="hide">скрыть</span>';
+    btn.addEventListener('click', function(e) {
+        var show = !btn.classList.contains('show') || !document.body.classList.contains('has-map');
+        document.body.classList.toggle('has-map', show);
+        Array.from(document.querySelectorAll('button.showMap.show')).forEach(function(e) { e.classList.remove('show'); });
+        btn.classList.toggle('show', show);
+
+        if (show)
+          showMap(hrefMin, reset);
+    });
+
+    var elem = document.createElement('a');
+    elem.target='_blank';
+    elem.className = 'showMap';
+    elem.title = 'показать треки на nakarte.me';
+    elem.innerHTML = '<button type="button"><span class="invis">треки </span>&#8599;</button>';
+    elem.href = tracksHref(docId, urls, false);
+
+    tgt.append(document.createElement('br'), btn, elem);
+  }
+
+  function tracksHref(docId, urls, minimize) {
+    if (urls.length == 0)
+      return '';
+
+    var parts = [];
+    if (minimize)
+      parts.push('min=1/1/1/1');
+
+    var str = JSON.stringify(urls.map(function(u) {return { n: u.decFname.replace(/\.[^\.]*$/, ''), u: dlHref(docId, u)}}));
+    var enc = bytesToBase64(new TextEncoder().encode(str))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
+    parts.push('nktj=' + enc);
+
+    return 'https://nakarte.me/#' + parts.join('&');
+  }
+
+  function bytesToBase64(bytes) {
+    const binString = Array.from(bytes, function(byte) {
+      return String.fromCodePoint(byte);}
+    ).join('');
+    return btoa(binString);
+  }
+
+  function dlHref(docId, entry) {
+    return String.format('https://westra.ru/passes/tlp.php?i={0}/{1}/.{2}', docId, entry.zipIdx, entry.ext); // заэнкодят их позже!
+  }
+
   function isUtf8(byteArray) {
     if (!byteArray)
       return false;
@@ -574,8 +593,8 @@
     var docId = m ? m[1] : null;
 
     var mappable = summ.getMappable().map(function(e) { e.decFname = normalizeName(e, dec866, decUtf); return e; }, this);
-    if (docPage)
-      showMap(docId, mappable);
+    if (docPage && sett.openMapByDefault)
+      showMap(tracksHref(docId, mappable, true));
 
     if (sett.logSummary)
       console.log('summary', summary);
@@ -608,12 +627,12 @@
     }
     else if (docPage && tgt.parentNode.parentNode.nodeName == 'TD') {
         var el = tgt.querySelector('.visToggle .visActivator');
-        el && el.remove();
+        el && el.remove(); //: tgt.parentNode.querySelector('.visActivator').remove();
         el = tgt.querySelector('.visToggle .shadowedPanel');
-        el && el.remove();
+        el && el.remove(); // : tgt.remove();
     }
 
-    addMapsButton(tgt.parentNode.parentNode, docId, mappable);
+    addMapsButton(tgt.parentNode.parentNode, docId, mappable, !docPage, docPage && sett.openMapByDefault);
   }
 
   function getSummary(zipEntries) {
@@ -636,11 +655,19 @@
       .then(summary => render(summary, anchorElem, docPage));
   }
 
+  function autoOpenMap(autoOpen) {
+    window.cookieStore.set({
+        url: 'https://www.tlib.ru',
+        name: "openMapByDefault",
+        value: autoOpen ? 1 : 0,
+    });
+  }
+
   function initExt() {
     // на странице отчета
     var zipHref = $get('HyperLinkGetZip');
     tryEnrichZip(zipHref, true);
-    showMap(0, []);
+    showMap('');
 
     // на главной
     (document.querySelectorAll('#DataGrid1 tbody tr td:last-child a') || [])
@@ -664,6 +691,8 @@
     else if (sett.searchOnMain && (window.location.hash || '').length > 0)
       trySearch(window.location.hash);
   }
+
+  window.tlibAutoOpenMap = autoOpenMap;
 
   if (sett.compatibilityMode)
     initExt();
