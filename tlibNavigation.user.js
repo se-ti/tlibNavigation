@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        tLib navigation
-// @version     5.2
+// @version     5.4
 // @namespace   http://tampermonkey.net/
 // @description Improve Tlib navigation
 // @downloadURL https://github.com/se-ti/tlibNavigation/raw/master/tlibNavigation.user.js
@@ -16,16 +16,17 @@
   'use strict';
 
   var sett = {
-      compatibilityMode: true,                   // работа из userScript вместе со скрпитом, уже установленным на сайте tLib
-      openMapByDefault: (document.cookie || '').indexOf('openMapByDefault=1') >= 0,                    // открывать карту
+    compatibilityMode: true,                   // работа из userScript вместе со скрпитом, уже установленным на сайте tLib
+    openMapByDefault: (document.cookie || '').indexOf('openMapByDefault=1') >= 0,                    // открывать карту
+    tracksInArchive: false,                    // запрашивать все треки в 1 архиве
 
-      searchOnMain: true,                        // предзаполнять поле Маршрут на главной значением из параметра запроса http://tlib.ru/#s=Казбек, и искать по нему, синтезируя событие click
-      navClicks: true,                           // перехватывать клик в номер страницы скана и подменять лишь ссылку на картинку
-      keyboardNavigationBetweenReports: true,    // Ctrl+Alt+стрелки -- переход между отчетами (кажется не работает в FF)
+    searchOnMain: true,                        // предзаполнять поле Маршрут на главной значением из параметра запроса http://tlib.ru/#s=Казбек, и искать по нему, синтезируя событие click
+    navClicks: true,                           // перехватывать клик в номер страницы скана и подменять лишь ссылку на картинку
+    keyboardNavigationBetweenReports: true,    // Ctrl+Alt+стрелки -- переход между отчетами (кажется не работает в FF)
 
-      // debug section
-      logAllEntries: false,
-      logSummary: false
+    // debug section
+    logAllEntries: false,
+    logSummary: false
   };
 
 
@@ -331,7 +332,7 @@
   }
 
   Tlib.prototype = {
-    mappable: ['kml', 'kmz', 'gpx', 'plt', 'wpt', 'geojson'],
+    mappable: ['kml', 'kmz', 'gpx', 'plt', 'wpt'], // , 'geojson' хороший, но его плохо поддерживает nakarte
     _indexable: {'htm': 'text/html', 'html': 'text/html', 'mhtml': 'application/x-mimearchive', 'shtml': 'text/html', 'pdf':'application/pdf', 'doc': 'application/msword', 'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'odp': 'application/vnd.oasis.opendocument.presentation', 'ppt': 'application/vnd.ms-powerpoint', 'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'odt': 'application/vnd.oasis.opendocument.text', 'rtf': 'application/rtf', 'txt': 'text/plain', 'xps': 'application/vnd.ms-xpsdocument', 'djvu': 'image/vnd'},
     _images: {'bmp': 'image/bmp', 'gif': 'image/gif', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 'tif': 'image/tiff', 'tiff': 'image/tiff', 'webp': 'image/webp',
               //video
@@ -443,7 +444,7 @@
         style = document.createElement('link');
         style.id = styleId;
         style.setAttribute('rel', 'stylesheet');
-        style.setAttribute('href', '/js/tlibnav.css?v=4.6');
+        style.setAttribute('href', '/js/tlibnav.css?v=5.3');
         document.body.append(style);
     }
 
@@ -479,11 +480,11 @@
       Array.from(document.querySelectorAll('form > table, table.MainHeader, body > div')).forEach(function(sel) { (sel).style.marginLeft = 'max(0px, calc(50% - 390px))';} );
 
       var style = document.createElement('style');
-      style.innerHTML = '#localMap {width: 0; position: fixed; top: 0; height: 100%; right: -4px; transition: width 0.7s; padding 0;} #localMap iframe {width: 100%; height: 100%;} form > table { transition: margin-left 0.7s; } ' +
+      style.innerHTML = '#localMap {width: 0; position: fixed; top: 0; height: 100%; right: -4px; transition: width 0.7s; padding 0;} #localMap iframe {width: 100%; height: 100%;} form > table, body> div, body > .MainHeader { transition: margin-left 0.7s; } ' +
           'button.showMap, .showMap button {min-height: 3.4ex; vertical-align: bottom;} .showMap + .showMap { margin-left: 1ex; } button.showMap.inner, .showMap.show .show,  .showMap .hide {display: none;} .showMap.show .hide { display: inline; }'  +
 
           '@media (min-width: 890px) { .has-map #localMap { width: calc(90% - 780px + 78px - 4em); } ' +
-          '.has-map form > table { margin-left: calc(10% - 78px) !important; } ' +
+          '.has-map form > table, .has-map > div, .has-map .MainHeader { margin-left: calc(10% - 78px) !important; } ' +
           'button .invis {display: none;} button.showMap.inner {display: unset;} }';
 
       document.body.append(style);
@@ -548,7 +549,11 @@
     var enc = bytesToBase64(new TextEncoder().encode(str))
         .replace(/\+/g, '-')
         .replace(/\//g, '_');
-    parts.push('nktj=' + enc);
+
+    if (!sett.tracksInArchive)
+      parts.push('nktj=' + enc);
+    else
+      parts.push('nktu=' + encodeURIComponent(String.format('https://westra.ru/passes/tlp.php?i={0}/geo', docId)));
 
     return 'https://nakarte.me/#' + parts.join('&');
   }
@@ -666,7 +671,8 @@
   function initExt() {
     // на странице отчета
     var zipHref = $get('HyperLinkGetZip');
-    tryEnrichZip(zipHref, true);
+    if (!sett.compatibilityMode)
+      tryEnrichZip(zipHref, true);
     showMap('');
 
     // на главной
